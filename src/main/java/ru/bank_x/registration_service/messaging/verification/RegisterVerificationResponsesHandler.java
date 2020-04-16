@@ -74,6 +74,7 @@ public class RegisterVerificationResponsesHandler implements MessageListener<Reg
 
     /**
      * Генерирует письмо на основании сообщения {@code message} и отправляет его
+     *
      * @return Boolean.TRUE внутри CompletableFuture если письмо было успешно отправлено
      * @throws TimeoutException если вызывающий поток был прерван во время ожидания таймаута отправки письма
      */

@@ -5,10 +5,10 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 import ru.bank_x.registration_service.dto.RegisterVerificationRequest;
 import ru.bank_x.registration_service.dto.RegisterVerificationResponse;
-import ru.bank_x.registration_service.utils.RandomBehaviorUtils;
 import ru.bank_x.registration_service.messaging.MessageId;
 import ru.bank_x.registration_service.messaging.MessageListener;
 import ru.bank_x.registration_service.messaging.ResponseSupplier;
+import ru.bank_x.registration_service.utils.RandomBehaviorUtils;
 
 import java.util.HashMap;
 import java.util.Map;

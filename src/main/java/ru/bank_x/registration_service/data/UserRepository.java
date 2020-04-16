@@ -26,6 +26,5 @@ public interface UserRepository extends CrudRepository<User, String> {
     @Query("UPDATE User u SET u.verified = :verified, u.notified = :notified WHERE u.login = :login")
     void updateVerifiedAndNotifiedByLogin(@Param("login") String login, @Param("verified") boolean verified, @Param("notified") boolean notified);
 
-//    @Query("select User as u from User where u.verified is not null and u.notified = :notified")
     Iterable<User> findAllByNotifiedAndVerifiedIsNotNull(@Param("notified") boolean notified);
 }

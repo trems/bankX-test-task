@@ -25,12 +25,16 @@ public class RegisterVerificationRequest {
     @Id
     String login;
 
-    @NonFinal @Setter UUID requestId;
+    @NonFinal
+    @Setter
+    UUID requestId;
 
-    @Transient String email;
+    @Transient
+    String email;
     @Transient
     User.FIO fio;
-    @Transient Date registeredAt;
+    @Transient
+    Date registeredAt;
 
     public RegisterVerificationRequest(User user) {
         this(user.getLogin(), null, user.getEmail(), user.getFio(), user.getRegisteredAt());

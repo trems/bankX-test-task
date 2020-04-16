@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Абстрактный event loop, работающий в отдельном потоке и запускающий задачи {@code task} в отдельном тред пуле {@code taskExecutorsPool}.
+ *
  * @param <T> тип элементов, содержащихся в очереди событий {@code itemsQueue}
  */
 @Slf4j
@@ -61,6 +62,7 @@ public abstract class TasksQueueExecutorLoop<T> {
     /**
      * Завершение работы класса.
      * Вызывающий тред блокируется до завершения работы тред пула и {@code taskStarterLoop}
+     *
      * @throws InterruptedException если вызывающий тред был прерван во время ожидания завершения работы тред пула
      */
     public void shutdown() throws InterruptedException {

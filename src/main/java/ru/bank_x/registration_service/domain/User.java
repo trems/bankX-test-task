@@ -4,7 +4,6 @@ import lombok.*;
 import org.springframework.lang.Nullable;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.util.Date;
 
 @Data
@@ -28,13 +27,16 @@ public class User {
 
     @EqualsAndHashCode.Exclude
     private Date registeredAt;
+
     @PrePersist
     void registeredAt() {
         this.registeredAt = new Date();
     }
 
-    @Nullable private boolean verified;
-    @Nullable private boolean notified;
+    @Nullable
+    private boolean verified;
+    @Nullable
+    private boolean notified;
 
 
     @Data
