@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.bank_x.registration_service.data.UserRepository;
 import ru.bank_x.registration_service.domain.User;
-import ru.bank_x.registration_service.dto.RegistrationForm;
+import ru.bank_x.registration_service.dto.RegistrationFormDto;
 import ru.bank_x.registration_service.messaging.verification.RegisterVerificationService;
 import ru.bank_x.registration_service.utils.PasswordEncoder;
 
@@ -51,7 +51,7 @@ public class RegistrationController {
      }
      */
     @PostMapping
-    public User processRegistration(@RequestBody @Valid RegistrationForm registrationForm, BindingResult bindingResult) throws ValidationException {
+    public User processRegistration(@RequestBody @Valid RegistrationFormDto registrationForm, BindingResult bindingResult) throws ValidationException {
         if (bindingResult.hasErrors()) {
             String errors = bindingResult.getAllErrors().stream()
                     .map(ObjectError::getDefaultMessage)
