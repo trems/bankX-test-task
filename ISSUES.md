@@ -1,5 +1,8 @@
+Мои мысли по каждому пункту выделены _**курсивом**_.
+
 Обратная связь на примерах из кода:
 
+<span>1)</span>
 ```java
 @Test
 void shouldReturnStatusCode500() throws URISyntaxException {
@@ -17,9 +20,13 @@ private void makeInvalidUserRequest() throws URISyntaxException {
     newUserRequest = new RequestEntity<>(jsonRequest, headers, HttpMethod.POST, new URI("http://localhost:" + port + "/register"));
 }
 ```
+
 Нет понимания разницы между внутренней ошибкой сервера и ошибкой валидации.
 
+_**Согласен, не хватает ExceptionHandler'а для ValidationException, из-за этого получаем 500 статус ответа**_
+
 ---
+<span>2)</span>
 ```java
 User savedUser = userRepository.save(registrationForm.toUser(passwordEncoder));
 registerVerificationService.verifyUser(savedUser);
@@ -27,7 +34,7 @@ registerVerificationService.verifyUser(savedUser);
 работаем с репозитарем в контроллере, потом передаем в сервис jpa сущность, в итоге поехали уровни абстракции
 
 ---
-
+<span>3)</span>
 лишний мусор в логах
 
 ```java
@@ -43,17 +50,20 @@ public User processRegistration(@RequestBody @Valid RegistrationForm registratio
 пользователь API ввел неверные данные при вызове системы, а мусорить с уровнем ERROR будем в логах сопровожденцам. Неверно введенные данные для API-сервиса - это нормальная ситуация, которая не должна мусорить в логах.
 
 ---
+<span>4)</span>
  ```java
 public class RegistrationController {
     private UserRepository userRepository;
     private RegisterVerificationService registerVerificationService;
     private PasswordEncoder passwordEncoder;
+    // ...
 }
 ```
 
 энкодер прямо в контроллере... странная затея. Контроллер довольно много на себя взял обязательств.
 
 ---
+<span>5)</span>
 ```java
 @Autowired
 public RegisterVerificationService(MessagingService<RegisterVerificationRequest, 
@@ -82,7 +92,7 @@ public RegisterVerificationService(MessagingService<RegisterVerificationRequest,
 слушатель не должен сам передавать управление, а должен регистировать его в контейнере, чтобы сам контейнер его вызывал
 
 ---
- 
+<span>6)</span>
 ```java
 MessageId sendRequestToVerify(RegisterVerificationRequest request) throws InterruptedException {
     try {
@@ -95,8 +105,13 @@ MessageId sendRequestToVerify(RegisterVerificationRequest request) throws Interr
 ```
 ушел на рекурсию - когда-нибудь возможно переполнение стэка.
 
----
+_**Переполнения стэка не будет потому что:  
+1)Из-за условия в RandomBehaviorUtils, что перед TimeoutException тред засыпает на 
+минуту  -> рекурсивные вызовы редки   
+2)CompletableFuture.get() не даст проработать рекурсии дольше установленного таймаута**_
 
+---
+<span>7)</span>
 ```java
 /**
  * Завершает работу {@code taskExecutorLoop}, таким образом заставляя его вернуть все неотработанные заявки
@@ -111,8 +126,6 @@ public void destroy() throws Exception {
 ```
 
 иногда JVM могут убить OOM-киллером. В такой ситуации все висящие в оперативке заявки, вероятно, потеряются, есть планировщик, он завязался вроде бы на флаги:
-
----
 
 ```java
 @Override
@@ -141,6 +154,11 @@ private void restoreMessages() {
 при запуске приложения вытягивает все заявки из БД, которые не были обработаны. Но код плохо структурирован, в итоге сложно найти нужное
 вся обработка ошибок свелась в обматывание в try/catch на каждый чих, что совсем не прибавляет читаемости решению.
 
+_**Использование метода put() блокирующей очереди привело к необходимости обработки InterruptedException.   
+Т.к. вызов метода в лямбде, то в сигнатуре не прописать. Для читаемости можно использовать `@SneakyThrows`**_
+
+---
+<span>8)</span>
 ```java
 @Component
 public class SimplePasswordEncoder implements PasswordEncoder {
@@ -154,14 +172,15 @@ public class SimplePasswordEncoder implements PasswordEncoder {
 пароли в base64, когда у spring security есть все необходимое, чтобы надежно хешировать и солить пароли:
 
 ```java
-package ru.skblab.registration_service.utils;
+package ru.bank_x.registration_service.utils;
 public interface PasswordEncoder {
     String encode(String password);
 }
 ```
+_**Не хотелось тянуть spring security и заниматься переопределением `WebSecurityConfigurerAdapter`. Решил, что для демонстрационных целей base64 будет достаточно**_
 
 ---
-
+<span>9)</span>
 ```java
 @Data
 @Entity
@@ -176,20 +195,16 @@ public class User {
     // ...
 ```
 
-С JPA тоже все слабовато.
-
-@Embedded - это встраиваемый объект, атрибуты которого хранятся в той же таблице.
-
-@OneToOne - это же реальная связь с другой таблицей.
-
-Так что тут попытка использовать взаимоисключающие параграфы.
-
-equals и hashCode тоже неверные.
-
-lombok не используется хотя подключен (_???? тут я не понял_)
+С JPA тоже все слабовато.  
+@Embedded - это встраиваемый объект, атрибуты которого хранятся в той же таблице.  
+@OneToOne - это же реальная связь с другой таблицей.  
+Так что тут попытка использовать взаимоисключающие параграфы.  
+(_**Изначально FIO было @Embedded, затем решил перенести FIO в отдельную таблицу. Момент про то, что это взаимоисключающие аннотации как-то упустил**_)   
+equals и hashCode тоже неверные. (_**использовал генерацию от lombok, забыл исключить ненужные поля**_)  
+lombok не используется хотя подключен (_**тут я не понял, возможно про неиспользование `@SneakyThrows`**_)
 
 ---
-
+<span>10)</span>
 ```java
 @Value
 @Entity

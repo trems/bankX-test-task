@@ -1,5 +1,6 @@
 package ru.bank_x.registration_service.messaging.verification;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -19,6 +20,7 @@ import ru.bank_x.registration_service.messaging.MessageToEmailSender;
 import ru.bank_x.registration_service.messaging.SendMailer;
 
 import java.util.concurrent.*;
+import java.util.stream.Stream;
 
 /**
  * Обработчик сообщений с типом {@link RegisterVerificationResponse}.
@@ -125,9 +127,11 @@ public class RegisterVerificationResponsesHandler implements MessageListener<Reg
         taskExecutorLoop.startWorkingLoop();
     }
 
+
     private void restoreMessages() {
         Iterable<User> notNotifiedUsers = userRepository.findAllByNotifiedAndVerifiedIsNotNull(false);
         notNotifiedUsers.forEach(user -> {
+
             RegisterVerificationRequest req = new RegisterVerificationRequest(user);
             RegisterVerificationResponse resp = new RegisterVerificationResponse(req, user.isVerified());
             try {
