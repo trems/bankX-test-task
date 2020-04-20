@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,12 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.bank_x.registration_service.data.UserRepository;
 import ru.bank_x.registration_service.domain.User;
 import ru.bank_x.registration_service.dto.RegistrationFormDto;
+import ru.bank_x.registration_service.errors.RegistrationFormNotValidException;
 import ru.bank_x.registration_service.messaging.verification.RegisterVerificationService;
 import ru.bank_x.registration_service.utils.PasswordEncoder;
 
 import javax.validation.Valid;
-import javax.validation.ValidationException;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -51,13 +49,9 @@ public class RegistrationController {
      }
      */
     @PostMapping
-    public User processRegistration(@RequestBody @Valid RegistrationFormDto registrationForm, BindingResult bindingResult) throws ValidationException {
+    public User processRegistration(@RequestBody @Valid RegistrationFormDto registrationForm, BindingResult bindingResult) throws RegistrationFormNotValidException {
         if (bindingResult.hasErrors()) {
-            String errors = bindingResult.getAllErrors().stream()
-                    .map(ObjectError::getDefaultMessage)
-                    .collect(Collectors.joining("; ", "Registration form errors: ", ""));
-            log.error(errors);
-            throw new ValidationException(errors);
+            throw new RegistrationFormNotValidException(bindingResult);
         }
         User savedUser = userRepository.save(registrationForm.toUser(passwordEncoder));
         registerVerificationService.verifyUser(savedUser);

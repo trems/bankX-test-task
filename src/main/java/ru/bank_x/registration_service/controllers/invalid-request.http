@@ -1,0 +1,14 @@
+POST http://localhost:9000/register
+Content-Type: application/json
+
+{
+  "login": "user",
+  "password": "password",
+  "confirmPassword": "password",
+  "email": "notValid.email",
+  "surname": "Ivanov",
+  "name": "Ivan",
+  "patronymic": "Ivanovich"
+}
+
+###

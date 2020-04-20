@@ -23,7 +23,12 @@ private void makeInvalidUserRequest() throws URISyntaxException {
 
 Нет понимания разницы между внутренней ошибкой сервера и ошибкой валидации.
 
-_**Согласен, не хватает ExceptionHandler'а для ValidationException, из-за этого получаем 500 статус ответа**_
+_**Согласен, в случае ошибки отрабатывает стандартный ErrorController.
+Нужно определить собственный Exception Handler и отдавать сообщения об ошибках с правильным статусом**_  
+_UPD: Добавил отдельный эксепшен для ошибки валидации формы регистрации (ru.bank_x.registration_service.errors.RegistrationFormNotValidException)
+и @ExceptionHandler метод для него (ru.bank_x.registration_service.errors.ExceptionsHandler#handleRegistrationFormNotValid).
+Это позволяет нам отдавать пользователю сообщения об ошибках без лишних данных (например, без стейктрейсов) и с нужным статусом.  
+Переработал RegistrationControllerTest. Теперь для теста не поднимается tomcat, а запросы тестируются через MockMvc._
 
 ---
 <span>2)</span>
