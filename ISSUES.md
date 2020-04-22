@@ -182,7 +182,9 @@ public interface PasswordEncoder {
     String encode(String password);
 }
 ```
-_**Не хотелось тянуть spring security и заниматься переопределением `WebSecurityConfigurerAdapter`. Решил, что для демонстрационных целей base64 будет достаточно**_
+
+_**Не хотелось тянуть spring security и заниматься переопределением `WebSecurityConfigurerAdapter`. Решил, что для демонстрационных целей base64 будет достаточно**_  
+_Добавил Spring Security, сделал доступным путь `/register`  и объявил бин PasswordEncoder'а_
 
 ---
 <span>9)</span>
