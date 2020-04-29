@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Service;
-import ru.bank_x.registration_service.dto.Response;
+import ru.bank_x.registration_service.messaging.dto.Response;
 import ru.bank_x.registration_service.utils.RandomBehaviorUtils;
 
 import java.util.Collections;

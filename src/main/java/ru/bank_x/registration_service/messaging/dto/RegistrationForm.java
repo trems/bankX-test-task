@@ -1,9 +1,7 @@
-package ru.bank_x.registration_service.dto;
+package ru.bank_x.registration_service.messaging.dto;
 
 import lombok.Value;
 import org.hibernate.validator.constraints.Length;
-import ru.bank_x.registration_service.domain.User;
-import ru.bank_x.registration_service.utils.PasswordEncoder;
 
 import javax.validation.constraints.*;
 
@@ -11,7 +9,7 @@ import javax.validation.constraints.*;
  * POJO, представляющий форму регистрации
  */
 @Value
-public class RegistrationFormDto {
+public class RegistrationForm {
 
     private static final String EMAIL_REGEX = "^[\\w!#$%&’*+/=?`{|}~^-]+(?:\\.[\\w!#$%&’*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$";
 
@@ -29,10 +27,6 @@ public class RegistrationFormDto {
     @NotBlank String surname;
     @NotBlank String name;
     @NotBlank String patronymic;
-
-    public User toUser(PasswordEncoder passwordEncoder) {
-        return new User(login, passwordEncoder.encode(password), email, new User.FIO(surname, name, patronymic));
-    }
 
     @AssertTrue(message = "Passwords must be equal")
     boolean isPasswordConfirmed() {

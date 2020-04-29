@@ -9,12 +9,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.bank_x.registration_service.data.UserRepository;
 import ru.bank_x.registration_service.domain.User;
-import ru.bank_x.registration_service.dto.RegistrationFormDto;
-import ru.bank_x.registration_service.errors.RegistrationFormNotValidException;
-import ru.bank_x.registration_service.messaging.verification.RegisterVerificationService;
-import ru.bank_x.registration_service.utils.PasswordEncoder;
+import ru.bank_x.registration_service.messaging.dto.RegistrationForm;
+import ru.bank_x.registration_service.services.registration.RegistrationFormNotValidException;
+import ru.bank_x.registration_service.services.registration.UserRegistrationServiceFacade;
 
 import javax.validation.Valid;
 
@@ -23,16 +21,13 @@ import javax.validation.Valid;
 @RequestMapping(path = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 public class RegistrationController {
 
-    private UserRepository userRepository;
-    private RegisterVerificationService registerVerificationService;
-    private PasswordEncoder passwordEncoder;
+    private UserRegistrationServiceFacade userRegistrationService;
 
     @Autowired
-    public RegistrationController(UserRepository userRepository, RegisterVerificationService registerVerificationService, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.registerVerificationService = registerVerificationService;
-        this.passwordEncoder = passwordEncoder;
+    public RegistrationController(UserRegistrationServiceFacade userRegistrationService) {
+        this.userRegistrationService = userRegistrationService;
     }
+
 
     /*
      Пример валидного запроса:
@@ -49,12 +44,10 @@ public class RegistrationController {
      }
      */
     @PostMapping
-    public User processRegistration(@RequestBody @Valid RegistrationFormDto registrationForm, BindingResult bindingResult) throws RegistrationFormNotValidException {
+    public User processRegistration(@RequestBody @Valid RegistrationForm registrationForm, BindingResult bindingResult) throws RegistrationFormNotValidException {
         if (bindingResult.hasErrors()) {
             throw new RegistrationFormNotValidException(bindingResult);
         }
-        User savedUser = userRepository.save(registrationForm.toUser(passwordEncoder));
-        registerVerificationService.verifyUser(savedUser);
-        return savedUser;
+        return userRegistrationService.registerUser(registrationForm);
     }
 }

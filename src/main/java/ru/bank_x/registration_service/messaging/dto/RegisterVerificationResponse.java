@@ -1,4 +1,4 @@
-package ru.bank_x.registration_service.dto;
+package ru.bank_x.registration_service.messaging.dto;
 
 import lombok.Value;
 

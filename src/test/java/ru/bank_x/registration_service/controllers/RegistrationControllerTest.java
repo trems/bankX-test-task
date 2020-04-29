@@ -7,14 +7,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.bank_x.registration_service.data.UserRepository;
 import ru.bank_x.registration_service.domain.User;
-import ru.bank_x.registration_service.messaging.verification.RegisterVerificationService;
+import ru.bank_x.registration_service.messaging.dto.RegistrationForm;
+import ru.bank_x.registration_service.services.registration.UserRegistrationServiceFacade;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -25,13 +27,16 @@ class RegistrationControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    private UserRepository userRepository = mock(UserRepository.class);
-    private RegisterVerificationService registerVerificationService = mock(RegisterVerificationService.class);
+    @MockBean
+    private UserRegistrationServiceFacade userRegistrationServiceFacade;
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    private User userForMatching = new User("user", "password", "user@domain.ru",
-            new User.FIO("Ivanov", "Ivan", "Ivanovich"));
+    private User userForMatching = User.builder()
+            .login("user")
+            .email("user@domain.ru")
+            .fio(new User.FIO("Ivanov", "Ivan", "Ivanovich"))
+            .build();
 
     // Оставил плейсхолдер для имейла для проверки валидации
     private String jsonRequest = "{\n" +
@@ -44,11 +49,9 @@ class RegistrationControllerTest {
             "  \"patronymic\": \"Ivanovich\"\n" +
             "}";
 
-
     @BeforeEach
     void setUp() {
-        when(userRepository.save(any())).thenReturn(userForMatching);
-        doNothing().when(registerVerificationService).verifyUser(any());
+        when(userRegistrationServiceFacade.registerUser(any(RegistrationForm.class))).thenReturn(userForMatching);
     }
 
     @Test
@@ -75,6 +78,7 @@ class RegistrationControllerTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
+        System.out.println("Response: " + responseBody);
         User savedUser = objectMapper.readValue(responseBody, User.class);
 
         assertEquals(userForMatching, savedUser);

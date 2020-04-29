@@ -1,4 +1,4 @@
-package ru.bank_x.registration_service.errors;
+package ru.bank_x.registration_service.services.registration;
 
 import lombok.Getter;
 import org.springframework.validation.BindingResult;

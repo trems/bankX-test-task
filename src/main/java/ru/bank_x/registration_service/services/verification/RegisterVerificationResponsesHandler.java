@@ -1,6 +1,5 @@
-package ru.bank_x.registration_service.messaging.verification;
+package ru.bank_x.registration_service.services.verification;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -9,18 +8,17 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Component;
-import ru.bank_x.registration_service.data.UserRepository;
 import ru.bank_x.registration_service.domain.User;
-import ru.bank_x.registration_service.dto.RegisterVerificationRequest;
-import ru.bank_x.registration_service.dto.RegisterVerificationResponse;
 import ru.bank_x.registration_service.executors.TasksQueueExecutorLoop;
 import ru.bank_x.registration_service.messaging.MessageListener;
 import ru.bank_x.registration_service.messaging.MessageToDatabaseSaver;
 import ru.bank_x.registration_service.messaging.MessageToEmailSender;
 import ru.bank_x.registration_service.messaging.SendMailer;
+import ru.bank_x.registration_service.messaging.dto.RegisterVerificationRequest;
+import ru.bank_x.registration_service.messaging.dto.RegisterVerificationResponse;
+import ru.bank_x.registration_service.persistence.UserDAO;
 
 import java.util.concurrent.*;
-import java.util.stream.Stream;
 
 /**
  * Обработчик сообщений с типом {@link RegisterVerificationResponse}.
@@ -36,15 +34,15 @@ public class RegisterVerificationResponsesHandler implements MessageListener<Reg
     private static final int QUEUE_SIZE = 500;
     private static final int TIMEOUT_SECONDS = 70;
 
-    private UserRepository userRepository;
+    private UserDAO userDAO;
     private SendMailer sendMailer;
 
     private static BlockingQueue<Message<RegisterVerificationResponse>> messagesQueue = new LinkedBlockingQueue<>(QUEUE_SIZE);
     private TasksQueueExecutorLoop<Message<RegisterVerificationResponse>> taskExecutorLoop;
 
     @Autowired
-    public RegisterVerificationResponsesHandler(UserRepository userRepository, SendMailer sendMailer) {
-        this.userRepository = userRepository;
+    public RegisterVerificationResponsesHandler(UserDAO userDAO, SendMailer sendMailer) {
+        this.userDAO = userDAO;
         this.sendMailer = sendMailer;
         this.taskExecutorLoop = new TasksQueueExecutorLoop<>(messagesQueue, Executors.newFixedThreadPool(4)) {
             @Override
@@ -106,7 +104,7 @@ public class RegisterVerificationResponsesHandler implements MessageListener<Reg
     private void updateUserNotifiedAndVerifiedStatusInDB(Message<RegisterVerificationResponse> message, boolean notified) {
         RegisterVerificationResponse response = message.getPayload();
         RegisterVerificationRequest originalRequest = response.getRequest();
-        userRepository.updateVerifiedAndNotifiedByLogin(originalRequest.getLogin(), response.isVerified(), notified);
+        userDAO.updateVerifiedAndNotifiedByLogin(originalRequest.getLogin(), response.isVerified(), notified);
         log.info("User's notified status [{}] was saved to to DB, id: {}", notified, originalRequest.getRequestId());
     }
 
@@ -129,7 +127,7 @@ public class RegisterVerificationResponsesHandler implements MessageListener<Reg
 
 
     private void restoreMessages() {
-        Iterable<User> notNotifiedUsers = userRepository.findAllByNotifiedAndVerifiedIsNotNull(false);
+        Iterable<User> notNotifiedUsers = userDAO.findAllByNotifiedAndVerifiedIsNotNull(false);
         notNotifiedUsers.forEach(user -> {
 
             RegisterVerificationRequest req = new RegisterVerificationRequest(user);

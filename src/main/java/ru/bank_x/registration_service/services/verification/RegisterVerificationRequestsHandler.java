@@ -1,13 +1,13 @@
-package ru.bank_x.registration_service.messaging.verification;
+package ru.bank_x.registration_service.services.verification;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
-import ru.bank_x.registration_service.dto.RegisterVerificationRequest;
-import ru.bank_x.registration_service.dto.RegisterVerificationResponse;
 import ru.bank_x.registration_service.messaging.MessageId;
 import ru.bank_x.registration_service.messaging.MessageListener;
 import ru.bank_x.registration_service.messaging.ResponseSupplier;
+import ru.bank_x.registration_service.messaging.dto.RegisterVerificationRequest;
+import ru.bank_x.registration_service.messaging.dto.RegisterVerificationResponse;
 import ru.bank_x.registration_service.utils.RandomBehaviorUtils;
 
 import java.util.HashMap;

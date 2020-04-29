@@ -1,4 +1,4 @@
-package ru.bank_x.registration_service.messaging.verification;
+package ru.bank_x.registration_service.services.verification;
 
 
 import lombok.extern.slf4j.Slf4j;
@@ -8,15 +8,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Service;
-import ru.bank_x.registration_service.data.RegisterVerificationRequestRepository;
 import ru.bank_x.registration_service.domain.User;
-import ru.bank_x.registration_service.dto.RegisterVerificationRequest;
-import ru.bank_x.registration_service.dto.RegisterVerificationResponse;
 import ru.bank_x.registration_service.executors.TasksQueueExecutorLoop;
 import ru.bank_x.registration_service.messaging.MessageId;
 import ru.bank_x.registration_service.messaging.MessageListener;
 import ru.bank_x.registration_service.messaging.MessagingService;
+import ru.bank_x.registration_service.messaging.dto.RegisterVerificationRequest;
+import ru.bank_x.registration_service.messaging.dto.RegisterVerificationResponse;
+import ru.bank_x.registration_service.persistence.VerificationRequestDAO;
 
+import java.util.ArrayList;
 import java.util.concurrent.*;
 
 
@@ -29,24 +30,23 @@ import java.util.concurrent.*;
  */
 @Slf4j
 @Service
-public class RegisterVerificationService implements InitializingBean, DisposableBean {
+public class RegisterVerificationServiceImpl implements RegisterVerificationService, InitializingBean, DisposableBean {
 
     private static final String TIMEOUT_MSG = "Verification Service is not responding. Awaiting %s: %s";
     private static final int TIMEOUT_SECONDS = 70;
     private static final int QUEUE_SIZE = 500;
 
     private MessagingService<RegisterVerificationRequest, RegisterVerificationResponse> messagingService;
-    private RegisterVerificationRequestRepository verificationRequestRepository;
+    private VerificationRequestDAO verificationRequestDAO;
 
     private static BlockingQueue<RegisterVerificationRequest> requestsQueue = new LinkedBlockingQueue<>(QUEUE_SIZE);
     private TasksQueueExecutorLoop<RegisterVerificationRequest> taskExecutorLoop;
 
     @Autowired
-    public RegisterVerificationService(MessagingService<RegisterVerificationRequest, RegisterVerificationResponse> messagingService,
-                                       MessageListener<RegisterVerificationResponse, Boolean> responsesListener,
-                                       RegisterVerificationRequestRepository verificationRequestRepository) {
+    public RegisterVerificationServiceImpl(MessagingService<RegisterVerificationRequest, RegisterVerificationResponse> messagingService,
+                                           MessageListener<RegisterVerificationResponse, Boolean> responsesListener, VerificationRequestDAO verificationRequestDAO) {
         this.messagingService = messagingService;
-        this.verificationRequestRepository = verificationRequestRepository;
+        this.verificationRequestDAO = verificationRequestDAO;
         taskExecutorLoop = new TasksQueueExecutorLoop<>(requestsQueue, Executors.newFixedThreadPool(4)) {
             @Override
             protected Runnable getTask(RegisterVerificationRequest item) {
@@ -112,7 +112,7 @@ public class RegisterVerificationService implements InitializingBean, Disposable
     @Override
     public void destroy() throws Exception {
         taskExecutorLoop.shutdown();
-        verificationRequestRepository.saveAll(requestsQueue);
+        verificationRequestDAO.saveAll(new ArrayList<>(requestsQueue));
         log.info("{} verification requests from queue saved to DB", requestsQueue.size());
     }
 
@@ -130,9 +130,10 @@ public class RegisterVerificationService implements InitializingBean, Disposable
      * C in-memory БД, конечно же, не работает.
      */
     private void restoreRequests() {
-        for (RegisterVerificationRequest req : this.verificationRequestRepository.findAll()) {
+        for (RegisterVerificationRequest req : verificationRequestDAO.findAll()) {
             try {
                 requestsQueue.put(req);
+                verificationRequestDAO.deleteById(req.getLogin());
             } catch (InterruptedException e) {
                 log.error("Thread interrupted while {} initialization", this.getClass().getSimpleName());
                 Thread.currentThread().interrupt();
